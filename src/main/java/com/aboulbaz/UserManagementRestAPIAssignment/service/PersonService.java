@@ -72,6 +72,32 @@ public class PersonService {
         return this.personDao.save(user);
     }
 
+    public Person getFakeUser() {
+        Person user = new Person();
+        Faker faker = new Faker();
+        String chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%&";
+        String nums = "0123456789";
+        Random rand = new Random();
+        StringBuilder phone = new StringBuilder(8);
+        for (int j = 0; j < 8; j++)
+            phone.append(chars.charAt(rand.nextInt(nums.length())));
+        Address address = faker.address();
+        user.setFirstName(faker.name().firstName());
+        user.setLastName(faker.name().lastName());
+        user.setBirthDate(faker.date().birthday());
+        user.setCity(address.city());
+        user.setCountry( address.countryCode().toUpperCase());
+        user.setAvatar(faker.avatar().image());
+        user.setCompany(faker.company().name());
+        user.setJobPosition(faker.job().field());
+        user.setMobile((rand.nextBoolean() ? "+2126" : "06") + phone.toString());
+        user.setUsername(faker.name().username());
+        user.setEmail(faker.internet().emailAddress());
+        user.setPassword(faker.internet().password(6, 10));
+        user.setRole(rand.nextBoolean() ? RoleEnum.ADMIN : RoleEnum.ROLE);
+        return user;
+    }
+
     public ResponseEntity<InputStreamResource> generateNewUsers(String counter) throws IOException {
         String fileName = "users-" + counter + ".json";
         MediaType mediaType = MediaTypeUtils.getMediaTypeForFileName(this.servletContext, fileName);
@@ -84,13 +110,8 @@ public class PersonService {
         String chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%&";
         String nums = "0123456789";
         Random rand = new Random();
-        int len = 0;
         for (int i = 0; i < numberOfUsers; i++) {
-            len = rand.nextInt(4) + 6;
-            StringBuilder pwd = new StringBuilder(len);
             StringBuilder phone = new StringBuilder(8);
-            for (int j = 0; j < len; j++)
-                pwd.append(chars.charAt(rand.nextInt(chars.length())));
             for (int j = 0; j < 8; j++)
                 phone.append(chars.charAt(rand.nextInt(nums.length())));
             Address address = faker.address();

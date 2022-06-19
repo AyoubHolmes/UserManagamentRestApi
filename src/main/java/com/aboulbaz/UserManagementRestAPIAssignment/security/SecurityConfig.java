@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -12,10 +13,17 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.aboulbaz.UserManagementRestAPIAssignment.model.RoleEnum;
+
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.security.SecurityScheme;
+
 import javax.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true, proxyTargetClass = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private JWTFilter filter;
@@ -32,8 +40,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/console/**").permitAll()
                 .antMatchers("api/users/generate").permitAll()
                 .antMatchers("api/users/batch").permitAll()
-                .antMatchers("api/users/me").permitAll()
-                .antMatchers("api/users/{username}").hasRole("ROLE_ADMIN")
+                // .antMatchers("api/users/me").hasAnyRole(RoleEnum.ADMIN.toString(),
+                // RoleEnum.ROLE.toString())
+                .antMatchers("api/users/me").hasAnyRole(RoleEnum.ADMIN.toString(), RoleEnum.ROLE.toString())
+                .antMatchers("api/users").hasRole(RoleEnum.ADMIN.toString())
                 .and()
                 .userDetailsService(uds)
                 .exceptionHandling()
@@ -56,6 +66,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     public AuthenticationManager authenticationManagerBean() throws Exception {
         return super.authenticationManagerBean();
+    }
+
+    @Bean
+    public OpenAPI customOpenAPI() {
+        return new OpenAPI()
+                .components(new Components()
+                        .addSecuritySchemes("bearer-key",
+                                new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer")
+                                        .bearerFormat("JWT")));
     }
 
 }

@@ -4,13 +4,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 
 import com.aboulbaz.UserManagementRestAPIAssignment.dao.PersonDao;
 import com.aboulbaz.UserManagementRestAPIAssignment.model.Person;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Optional;
 
 @Component
@@ -26,11 +27,13 @@ public class MyUserDetailsService implements UserDetailsService {
         if (!personRes.isPresent() || personRes.get() == null)
             personRes = personDao.findByUsername(email);
         if (!personRes.isPresent() || personRes.get() == null)
-            throw new RuntimeException("Could not findUser with email = " + email);
+            throw new RuntimeException("Could not findUser with email or username = " + email);
+
         Person user = personRes.get();
-        return new org.springframework.security.core.userdetails.User(
+        System.out.println(user.getRole().toString());
+        return new User(
                 user.getEmail(),
                 user.getPassword(),
-                Arrays.asList(new SimpleGrantedAuthority("ROLE_ROLE"), new SimpleGrantedAuthority("ROLE_ADMIN")));
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().toString())));
     }
 }

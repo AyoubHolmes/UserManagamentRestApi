@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,12 +20,21 @@ import org.springframework.web.multipart.MultipartFile;
 import com.aboulbaz.UserManagementRestAPIAssignment.model.Person;
 import com.aboulbaz.UserManagementRestAPIAssignment.service.PersonService;
 
+import io.swagger.v3.oas.annotations.Operation;
+
+// import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
+import org.springframework.http.MediaType;
+
 @RequestMapping("/api/users")
 @RestController
 public class PersonController {
     @Autowired
     private PersonService personService;
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(security = { @SecurityRequirement(name = "bearer-key") })
     @PostMapping("add")
     public Person createUser(@RequestBody Person person) {
         try {
@@ -34,6 +44,8 @@ public class PersonController {
         }
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(security = { @SecurityRequirement(name = "bearer-key") })
     @GetMapping()
     public List<Person> getAllPerson() {
         try {
@@ -43,7 +55,9 @@ public class PersonController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ROLE', 'ADMIN')")
     @GetMapping("/me")
+    @Operation(security = { @SecurityRequirement(name = "bearer-key") })
     public Person getUserDetails() {
         try {
             String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -63,11 +77,13 @@ public class PersonController {
         }
     }
 
-    @PostMapping("batch")
+    @PostMapping(value = "batch", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
     public ResponseEntity<?> handleFileUpload(@RequestParam("file") MultipartFile file) {
         return this.personService.handleFileUpload(file);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(security = { @SecurityRequirement(name = "bearer-key") })
     @GetMapping("/{username}")
     public Person getUserByUsername(@PathVariable("username") String username) {
         return this.personService.findByUsername(username).get();
